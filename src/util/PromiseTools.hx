@@ -96,6 +96,13 @@ class PromiseTools
 		return thenVal(promise, true);
 	}
 
+	public static function thenVoid(promise :Promise<Dynamic>) :Promise<Void>
+	{
+		return promise.then(function(_) {
+			return;
+		});
+	}
+
 	public static function thenVal<T>(promise :Promise<Dynamic>, val :T) :Promise<T>
 	{
 		return promise.then(function(_) {
