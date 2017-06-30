@@ -7,7 +7,7 @@ import promhx.Promise;
 import promhx.CallbackPromise;
 
 #if nodejs
-import js.npm.RedisClient;
+import js.npm.redis.RedisClient;
 #else
 typedef RedisClient = Dynamic;
 #end

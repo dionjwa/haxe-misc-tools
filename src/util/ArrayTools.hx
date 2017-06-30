@@ -10,4 +10,14 @@ class ArrayTools
 		}
 		return a;
 	}
+
+	public static function mapFromField<A>(it :Iterator<A>, fieldName :String) :Map<String,A>
+	{
+		var a = new Map<String, A>();
+		while(it.hasNext()) {
+			var val = it.next();
+			a.set(Reflect.field(val, fieldName), val);
+		}
+		return a;
+	}
 }
