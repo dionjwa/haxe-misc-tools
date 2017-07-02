@@ -1,5 +1,7 @@
 package util;
 
+import haxe.DynamicAccess;
+
 class ArrayTools
 {
 	public static function array<A>(it :Iterator<A>) :Array<A>
@@ -11,12 +13,20 @@ class ArrayTools
 		return a;
 	}
 
-	public static function mapFromField<A>(it :Iterator<A>, fieldName :String) :Map<String,A>
+	public static function mapFromField<A>(arr :Array<A>, fieldName :String) :Map<String,A>
 	{
 		var a = new Map<String, A>();
-		while(it.hasNext()) {
-			var val = it.next();
+		for (val in arr) {
 			a.set(Reflect.field(val, fieldName), val);
+		}
+		return a;
+	}
+
+	public static function toDynamicAccess<A>(arr :Array<A>, f :A->String) :DynamicAccess<A>
+	{
+		var a :DynamicAccess<A> = {};
+		for (val in arr) {
+			a.set(f(val), val);
 		}
 		return a;
 	}
