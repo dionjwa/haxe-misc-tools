@@ -69,5 +69,5 @@ abstract TypedDynamicAccess<K:String,T>(Dynamic<T>) from Dynamic<T> to Dynamic<T
 	/**
 		Returns an array of `keys` in a structure.
 	**/
-	public inline function keys():Array<K> return Reflect.fields(this);
+	public inline function keys():Array<K> return cast Reflect.fields(this);
 }
