@@ -5,6 +5,38 @@ import haxe.DynamicAccess;
 
 class ObjectTools
 {
+	public static function assign(target:Dynamic, sources:Array<Dynamic>):Dynamic
+	{
+		for (source in sources)
+			if (source != null)
+				for (field in Reflect.fields(source))
+					Reflect.setField(target, field, Reflect.field(source, field));
+		return target;
+	}
+
+	public static function copy(source1:Dynamic, ?source2:Dynamic):Dynamic
+	{
+		var target = {};
+		for (field in Reflect.fields(source1))
+			Reflect.setField(target, field, Reflect.field(source1, field));
+		if (source2 != null)
+			for (field in Reflect.fields(source2))
+				Reflect.setField(target, field, Reflect.field(source2, field));
+		return target;
+	}
+
+	public static function shallowCompare(a:Dynamic, b:Dynamic):Bool
+	{
+		var aFields = Reflect.fields(a);
+		var bFields = Reflect.fields(b);
+		if (aFields.length != bFields.length)
+			return false;
+		for (field in aFields)
+			if (!Reflect.hasField(b, field) || Reflect.field(b, field) != Reflect.field(a, field))
+				return false;
+		return true;
+	}
+
 	/**
 	 * obj1 fields will be overridden by obj2 fields.
 	 */
