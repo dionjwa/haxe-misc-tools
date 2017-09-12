@@ -1,5 +1,7 @@
 package util;
 
+import js.npm.moment.MomentTimezone;
+
 import t9.abstracts.time.*;
 
 using DateTools;
@@ -46,6 +48,6 @@ class DateFormatTools
 	{
 		tz = tz == null ? "America/Los_Angeles" : tz;
 		formatString = formatString == null ? "YYYY-MM-DDTHH:mm:ss z" : formatString;
-		return new js.npm.moment.MomentTimezone(time).tz(tz).format(formatString).toString();
+		return new MomentTimezone(time).tz(tz).format(formatString).toString();
 	}
 }
