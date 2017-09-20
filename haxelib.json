@@ -1,0 +1,11 @@
+{
+    "name": "haxe-misc-tools",
+    "url": "https://github.com/dionjwa/haxe-misc-tools",
+    "description": "Misc useful tools and macros mostly node.js centered.",
+    "classPath": "src",
+    "license": "MIT",
+    "version": "0.1.0",
+    "releasenote": "Initial Release",
+    "contributors": ["dionjwa"],
+    "tags": ["js", "nodejs"]
+}
