@@ -32,7 +32,7 @@ class DockerPromises
 
 	public static function listImages(docker :Docker) :Promise<Array<ImageData>>
 	{
-		return promhx.RetryPromise.pollDecayingInterval(__listImages.bind(docker), RETRIES, RETRIES_TIME_INTERVAL, 'listContainers');
+		return promhx.RetryPromise.retryDecayingInterval(__listImages.bind(docker), RETRIES, RETRIES_TIME_INTERVAL, 'listContainers');
 	}
 
 	static function __listImages(docker :Docker) :Promise<Array<ImageData>>
@@ -104,7 +104,7 @@ class DockerPromises
 
 	public static function listContainers(docker :Docker, ?opts :ListContainerOptions) :Promise<Array<ContainerData>>
 	{
-		return promhx.RetryPromise.pollDecayingInterval(__listContainers.bind(docker, opts), RETRIES, RETRIES_TIME_INTERVAL, 'listContainers');
+		return promhx.RetryPromise.retryDecayingInterval(__listContainers.bind(docker, opts), RETRIES, RETRIES_TIME_INTERVAL, 'listContainers');
 	}
 
 	static function __listContainers(docker :Docker, ?opts :ListContainerOptions) :Promise<Array<ContainerData>>
@@ -132,7 +132,7 @@ class DockerPromises
 
 	public static function removeContainer(container :DockerContainer, ?opts :RemoveContainerOpts, ?logString :String) :Promise<Bool>
 	{
-		return promhx.RetryPromise.pollDecayingInterval(__removeContainer.bind(container, opts), RETRIES, RETRIES_TIME_INTERVAL, logString != null ? logString : 'removeContainer');
+		return promhx.RetryPromise.retryDecayingInterval(__removeContainer.bind(container, opts), RETRIES, RETRIES_TIME_INTERVAL, logString != null ? logString : 'removeContainer');
 	}
 
 	public static function wait(container :DockerContainer) :Promise<{StatusCode:Int}>

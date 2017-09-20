@@ -12,6 +12,8 @@ import js.npm.redis.RedisClient;
 typedef RedisClient = Dynamic;
 #end
 
+using promhx.PromiseTools;
+
 class RedisPromises
 {
 	inline public static function keys(redis :RedisClient, keyString :String) :Promise<Array<String>>
@@ -25,28 +27,28 @@ class RedisPromises
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.set(key, val, promise.cb2);
-		return promise;
+		return promise.thenTrue();
 	}
 
 	inline public static function setex(redis :RedisClient, key :String, time :Int, val :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.setex(key, time, val, promise.cb2);
-		return promise;
+		return promise.then(function(s) return s.asString());
 	}
 
 	inline public static function get(redis :RedisClient, key :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.get(key, promise.cb2);
-		return promise;
+		return promise.then(function(s) return s.asString());
 	}
 
 	inline public static function hget(redis :RedisClient, hashkey :String, hashField :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.hget(hashkey, hashField, promise.cb2);
-		return promise;
+		return promise.then(function(s) return s.asString());
 	}
 
 	inline public static function hgetall(redis :RedisClient, hashkey :String) :Promise<Dynamic>
@@ -164,7 +166,7 @@ class RedisPromises
 		var promise = new promhx.CallbackPromise();
 		redis.zscore(key, member, promise.cb2);
 		return promise
-			.then(function(score :Null<String>) {
+			.then(function(score) {
 				return score != null;
 			});
 	}
@@ -200,8 +202,11 @@ class RedisPromises
 	public static function hmset(redis :RedisClient, key :String, fieldVals :Dynamic<String>) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
-		redis.hmset(key, fieldVals, promise.cb2);
-		return promise;
+		var keyS :RedisString = key;
+		var fieldValsS :Dynamic<RedisString> = cast fieldVals;
+		var cb :Null<js.Error>->Void = cast promise.cb2;
+		redis.hmset(keyS, fieldValsS, cb);
+		return promise.then(function(s) return s.asString());
 	}
 
 	public static function deleteAllKeys(client :RedisClient) :Promise<Bool>
