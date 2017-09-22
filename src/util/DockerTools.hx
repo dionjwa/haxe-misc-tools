@@ -287,7 +287,7 @@ class DockerTools
 
 	public static function buildDockerImage(docker :Docker, id :String, image :IReadable, resultStream :IWritable, ?log :AbstractLogger) :Promise<ImageId>
 	{
-		return promhx.RetryPromise.pollDecayingInterval(__buildDockerImage.bind(docker, id, image, resultStream, log), 3, 100, 'DockerTools.buildDockerImage($id)');
+		return promhx.RetryPromise.retryDecayingInterval(__buildDockerImage.bind(docker, id, image, resultStream, log), 3, 100, 'DockerTools.buildDockerImage($id)');
 	}
 
 	public static function buildImageFromFiles(docker :Docker, imageId :String, fileData :DynamicAccess<String>, resultStream :IWritable, ?log :AbstractLogger) :Promise<ImageId>
@@ -377,13 +377,13 @@ class DockerTools
 
 	public static function pushImage(docker :Docker, imageName :String, ?tag :String, ?resultStream :IWritable, ?log :AbstractLogger) :Promise<Bool>
 	{
-		return promhx.RetryPromise.pollDecayingInterval(__pushImage.bind(docker, imageName, tag, resultStream, log), 3, 100, 'DockerTools.pushImage(imageName=$imageName)');
+		return promhx.RetryPromise.retryDecayingInterval(__pushImage.bind(docker, imageName, tag, resultStream, log), 3, 100, 'DockerTools.pushImage(imageName=$imageName)');
 	}
 
-	public static function pullImage(docker :Docker, imageName :String, ?opts :Dynamic, ?type :PollType, ?retries :Int = 3, ?interval :Int = 100, ?log :AbstractLogger) :Promise<Array<Dynamic>>
+	public static function pullImage(docker :Docker, imageName :String, ?opts :Dynamic, ?type :RetryType, ?retries :Int = 3, ?interval :Int = 100, ?log :AbstractLogger) :Promise<Array<Dynamic>>
 	{
-		type = type == null ? PollType.regular : type;
-		return RetryPromise.poll(__pullImage.bind(docker, imageName, opts, log), type, retries, interval, 'DockerTools.pullImage(imageName=$imageName)');
+		type = type == null ? RetryType.regular : type;
+		return RetryPromise.retry(__pullImage.bind(docker, imageName, opts, log), type, retries, interval, 'DockerTools.pullImage(imageName=$imageName)');
 	}
 
 	public static function __pushImage(docker :Docker, imageName :String, ?tag :String, ?resultStream :IWritable, ?log :AbstractLogger) :Promise<Bool>
