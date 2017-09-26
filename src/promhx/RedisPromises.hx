@@ -178,6 +178,13 @@ class RedisPromises
 		return promise;
 	}
 
+	public static function zrange(redis :RedisClient, key :String, from :Int, to :Int) :Promise<Array<Dynamic>>
+	{
+		var promise = new promhx.CallbackPromise();
+		redis.zrange(key, from, to, promise.cb2);
+		return promise;
+	}
+
 	public static function lpush(redis :RedisClient, key :String, value :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise();
