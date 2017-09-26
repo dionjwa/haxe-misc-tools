@@ -9,7 +9,8 @@ package util;
 
 import haxe.Json;
 
-import js.npm.RedisClient;
+import js.npm.Redis;
+import js.npm.redis.RedisClient;
 
 import promhx.Promise;
 import promhx.Stream;
@@ -58,7 +59,7 @@ class RedisTools
 
 	public static function createStreamCustom<T>(redis :RedisClient, channelKey :String, ?getter :Dynamic->Promise<T>, ?usePatterns :Bool = false) :Stream<T>
 	{
-		var subscribeClient = RedisClient.createClient(redis.connectionOption.port, redis.connectionOption.host);
+		var subscribeClient = Redis.createClient(redis.connectionOption.port, redis.connectionOption.host);
 		return createStreamCustomInternal(subscribeClient, channelKey, getter, usePatterns);
 	}
 
@@ -90,13 +91,13 @@ class RedisTools
 		}
 
 		if (usePatterns) {
-			subscribeClient.on(RedisClient.EVENT_PMESSAGE, function (pattern, channel, message) {
+			subscribeClient.on(RedisSubscriptionEvent.PMessage, function (pattern, channel, message) {
 				if (pattern == channelKey) {
 					getAndSend(message);
 				}
 			});
 		} else {
-			subscribeClient.on(RedisClient.EVENT_MESSAGE, function (channel, message) {
+			subscribeClient.on(RedisSubscriptionEvent.Message, function (channel, message) {
 				if (channel == channelKey) {
 					getAndSend(message);
 				}
@@ -126,7 +127,7 @@ class RedisTools
 
 		//Call immediately after subscribing, and again after 100ms, since it takes a while to connect
 		getAndSend(null);
-		subscribeClient.once(RedisClient.EVENT_SUBSCRIBE, function (channel, count) {
+		subscribeClient.once(RedisSubscriptionEvent.Subscribe, function (channel, count) {
 			if (!unsubscribed) {
 				getAndSend(null);
 			}
