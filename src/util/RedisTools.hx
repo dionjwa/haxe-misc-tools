@@ -59,7 +59,7 @@ class RedisTools
 
 	public static function createStreamCustom<T>(redis :RedisClient, channelKey :String, ?getter :Dynamic->Promise<T>, ?usePatterns :Bool = false) :Stream<T>
 	{
-		var subscribeClient = Redis.createClient(redis.connectionOption.port, redis.connectionOption.host);
+		var subscribeClient = Redis.createClient(redis.connection_options.port, redis.connection_options.host);
 		return createStreamCustomInternal(subscribeClient, channelKey, getter, usePatterns);
 	}
 
