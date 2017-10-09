@@ -83,9 +83,9 @@ class NodejsMacros
 								switch(fullPath) {
 									case 'Bool':
 										if (defaultVal != null) {
-											Context.parse('{ return js.Node.process.env.get("${fname}") == null ? $defaultVal : !(js.Node.process.env.get("${fname}") == "0" || js.Node.process.env.get("${fname}").toLowerCase() == "false");}', pos);
+											Context.parse('{ return js.Node.process.env.get("${fname}") == null || js.Node.process.env.get("${fname}") == "" ? $defaultVal : !(js.Node.process.env.get("${fname}") == "0" || js.Node.process.env.get("${fname}").toLowerCase() == "false");}', pos);
 										} else {
-											Context.parse('{ return !(js.Node.process.env.get("${fname}") == null || js.Node.process.env.get("${fname}") == "0" || js.Node.process.env.get("${fname}").toLowerCase() == "false");}', pos);
+											Context.parse('{ return !(js.Node.process.env.get("${fname}") == null || js.Node.process.env.get("${fname}") == "" || js.Node.process.env.get("${fname}") == "0" || js.Node.process.env.get("${fname}").toLowerCase() == "false");}', pos);
 										}
 									case 'Int':
 										if (defaultVal != null) {
