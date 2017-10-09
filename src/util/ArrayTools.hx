@@ -70,4 +70,13 @@ class ArrayTools
 		}
 		return a;
 	}
+
+	public static function removeDuplicates<A:(String>)>(arr :Array<A>) :Array<A>
+	{
+		var a :DynamicAccess<A> = {};
+		for (val in arr) {
+			Reflect.setField(a, val, true);
+		}
+		return Reflect.fields(a);
+	}
 }

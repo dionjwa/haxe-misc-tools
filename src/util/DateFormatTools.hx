@@ -24,6 +24,7 @@ class DateFormatTools
 			return new Milliseconds(Std.parseFloat(s));
 		}
 	}
+
 	public static function getShortStringOfDateDiff(d1 :Date, d2 :Date) :String
 	{
 		if (d1.getTime() < d2.getTime()) {
@@ -31,8 +32,12 @@ class DateFormatTools
 			d1 = d2;
 			d2 = d3;
 		}
-		var dateBlob = DateTools.parse(d1.getTime() - d2.getTime());
-		var date = Date.fromTime(d1.getTime() - d2.getTime());
+		return getShortStringOfDuration(d1.getTime() - d2.getTime());
+	}
+
+	public static function getShortStringOfDuration(duration :Float) :String
+	{
+		var dateBlob = DateTools.parse(duration);
 		if (dateBlob.days > 0) {
 			return '${dateBlob.days}d';
 		} else if (dateBlob.hours > 0) {
