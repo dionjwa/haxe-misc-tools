@@ -2,6 +2,8 @@ package promhx;
 
 import haxe.Json;
 
+import js.node.Buffer;
+
 import promhx.Deferred;
 import promhx.Promise;
 
@@ -40,7 +42,12 @@ class RetryPromise
 			p.catchError(function(err) {
 				if (attempts < maxRetryAttempts) {
 					if (!supressLogs) {
-						Log.debug('$logPrefix Failed attempt $attempts err=${Json.stringify(err)}');
+						var errString = if (Buffer.isBuffer(err)) {
+							cast(err, js.node.Buffer).toString();
+						} else {
+							err;
+						}
+						Log.debug('$logPrefix Failed attempt $attempts err=${errString}');
 					}
 					js.Node.setTimeout(retryLocal, intervalMilliseconds);
 				} else {

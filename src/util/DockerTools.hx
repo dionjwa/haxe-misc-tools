@@ -862,7 +862,6 @@ class DockerTools
 			default:
 				return Std.string(c.Status).startsWith('Up');
 		};
-		Log.info('isRunning ? ${c.Id} ${c.Status} $t');
 		return t;
 	}
 

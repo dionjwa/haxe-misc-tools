@@ -158,7 +158,26 @@ class RedisPromises
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.smembers(key, promise.cb2);
-		return promise;
+		return promise
+			.then(function(arr) {
+				if (isArrayObjectEmpty(arr)) {
+					arr = [];
+				}
+				return arr;
+			});
+	}
+
+	public static function sinter(redis :RedisClient, keys :Array<String>) :Promise<Array<Dynamic>>
+	{
+		var promise = new promhx.CallbackPromise();
+		redis.sinter(keys, promise.cb2);
+		return promise
+			.then(function(arr) {
+				if (isArrayObjectEmpty(arr)) {
+					arr = [];
+				}
+				return arr;
+			});
 	}
 
 	public static function zismember(redis :RedisClient, key :String, member :String) :Promise<Bool>
@@ -175,6 +194,13 @@ class RedisPromises
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.zadd(key, score, value, promise.cb2);
+		return promise;
+	}
+
+	public static function zrange(redis :RedisClient, key :String, from :Int, to :Int) :Promise<Array<Dynamic>>
+	{
+		var promise = new promhx.CallbackPromise();
+		redis.zrange(key, from, to, promise.cb2);
 		return promise;
 	}
 
@@ -226,5 +252,20 @@ class RedisPromises
 			});
 		});
 		return promise.boundPromise;
+	}
+
+	/**
+	 * Empty arrays can be returned as objects, which have no length.
+	 * It's annoying.
+	 * @param  obj :Dynamic      [description]
+	 * @return     [description]
+	 */
+	static function isArrayObjectEmpty(obj :Dynamic) :Bool
+	{
+		if (obj == null) {
+			return true;
+		} else {
+			return Std.is(obj, Array) ? obj.length == 0 : true;
+		}
 	}
 }

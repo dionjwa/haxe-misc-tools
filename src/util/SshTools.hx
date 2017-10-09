@@ -31,10 +31,10 @@ typedef ExecResult = {
 
 class SshTools
 {
-	public static function getSsh(config :ConnectOptions, ?attempts :Int = 10, ?delayBetweenRetries :Int = 10, ?pollType:PollType, ?logPrefix :String, ?supressLogs :Bool= false, ?attemptCallback :Void->Void) :Promise<SshClient>
+	public static function getSsh(config :ConnectOptions, ?attempts :Int = 10, ?delayBetweenRetries :Int = 10, ?pollType:RetryType, ?logPrefix :String, ?supressLogs :Bool= false, ?attemptCallback :Void->Void) :Promise<SshClient>
 	{
 		if (pollType == null) {
-			pollType = PollType.regular;
+			pollType = RetryType.regular;
 		}
 		logPrefix = (logPrefix == null ? '' : logPrefix) + ' host=${config.host}';
 		// Reflect.setField(config, 'debug', js.Node.console.log);
@@ -65,10 +65,10 @@ class SshTools
 			ssh.connect(config);
 			return promise.boundPromise;
 		}
-		return RetryPromise.poll(attemptSsh, pollType, attempts, delayBetweenRetries, logPrefix, supressLogs);
+		return RetryPromise.retry(attemptSsh, pollType, attempts, delayBetweenRetries, logPrefix, supressLogs);
 	}
 
-	public static function execute(config :ConnectOptions, command :String, ?attempts :Int = 10, ?delayBetweenRetries :Int = 10, ?pollType:PollType, ?logPrefix :String, ?supressLogs :Bool= false) :Promise<ExecResult>
+	public static function execute(config :ConnectOptions, command :String, ?attempts :Int = 10, ?delayBetweenRetries :Int = 10, ?pollType:RetryType, ?logPrefix :String, ?supressLogs :Bool= false) :Promise<ExecResult>
 	{
 		return getSsh(config, attempts, delayBetweenRetries, pollType, logPrefix, supressLogs)
 			.pipe(function(client) {

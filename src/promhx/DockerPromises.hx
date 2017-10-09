@@ -87,7 +87,7 @@ class DockerPromises
 					var data = Json.parse(bufferString);
 					if (data.status != null) {
 						if (data.status.startsWith('Status:')) {
-							Log.info(data.status);
+							Log.debug(data.status);
 						}
 					} else if (data.error != null) {
 						Log.error('error: ${Json.stringify(data)}');
