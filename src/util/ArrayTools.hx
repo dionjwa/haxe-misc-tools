@@ -77,6 +77,6 @@ class ArrayTools
 		for (val in arr) {
 			Reflect.setField(a, val, true);
 		}
-		return Reflect.fields(a);
+		return cast Reflect.fields(a);
 	}
 }
