@@ -17,6 +17,16 @@ import redux.IReducer;
 import redux.Redux;
 import redux.StoreMethods;
 
+enum WebsocketAction
+{
+	// SendAction(action :Action);
+	Connect;
+	Connected;
+	Disconnect;
+	Reconnect;
+	ServerError(error :Dynamic, e :EnumValue);
+}
+
 /**
 	Redux actions to dispatch from views and match in reducer/middleware
 **/
@@ -29,9 +39,13 @@ enum WebsocketConnectionStatus
 
 typedef WebsocketState = {
 	var status :WebsocketConnectionStatus;
+	@:optional var lastSent :Action;
 }
 
-typedef ActionHandler<T:({ws:WebsocketState})>=StoreMethods<T>->Action->Dispatch->Dynamic;
+/**
+ * Send some actions to the server.
+ */
+typedef SendActionFilter=Action->Bool;
 
 class WebsocketMiddleware<T:({ws:WebsocketState})>
 	implements IReducer<WebsocketAction, WebsocketState>
@@ -41,7 +55,7 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 	};
 	public var store :StoreMethods<T>;
 
-	var _incomingActionHandler :ActionHandler<T>;
+	var _filter :SendActionFilter;
 
 	var _ws :WebSocket;
 	var _queuedMessages :Array<Action> = [];
@@ -55,9 +69,9 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 		return this;
 	}
 
-	public function setHandler(handler :ActionHandler<T>)
+	public function setSendFilter(filter :SendActionFilter)
 	{
-		_incomingActionHandler = handler;
+		_filter = filter;
 		return this;
 	}
 
@@ -94,6 +108,8 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 				copy(state, {status: WebsocketConnectionStatus.Connecting});
 			case ServerError(error, action):
 				state;
+			// case SendAction(action):
+			// 	copy(state, {lastSent: action});
 		}
 	}
 
@@ -122,15 +138,16 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 							case Connected:
 							case ServerError(error, action):
 								trace('Error returned from server error=${error} action=${action}');
-						}
-						return next(action);
-					} else {
-						if (_incomingActionHandler != null) {
-							return _incomingActionHandler(store, action, next);
-						} else {
-							return next(action);
+							// case SendAction(action):
+							// 	trace('Sending to server ${action}');
+							// 	sendAction(action);
 						}
 					}
+
+					if (_filter == null || _filter(action)) {
+						sendAction(action);
+					}
+					return next(action);
 				}
 			}
 		}
