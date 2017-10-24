@@ -19,7 +19,6 @@ import redux.StoreMethods;
 
 enum WebsocketAction
 {
-	// SendAction(action :Action);
 	Connect;
 	Connected;
 	Disconnect;
@@ -108,8 +107,6 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 				copy(state, {status: WebsocketConnectionStatus.Connecting});
 			case ServerError(error, action):
 				state;
-			// case SendAction(action):
-			// 	copy(state, {lastSent: action});
 		}
 	}
 
@@ -138,9 +135,6 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 							case Connected:
 							case ServerError(error, action):
 								trace('Error returned from server error=${error} action=${action}');
-							// case SendAction(action):
-							// 	trace('Sending to server ${action}');
-							// 	sendAction(action);
 						}
 					}
 
