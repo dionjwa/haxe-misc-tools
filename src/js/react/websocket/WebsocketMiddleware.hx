@@ -214,7 +214,6 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 		}
 		switch (store.getState().ws.status) {
 			case Connecting,Connected:
-				trace('websocket closed but status=${store.getState().ws.status}, so reconnecting');
 				//Websocket got disconnected prematurely, reconnect
 				Browser.window.setTimeout(function() {
 					store.dispatch(WebsocketAction.Reconnect);

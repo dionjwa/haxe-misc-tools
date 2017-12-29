@@ -15,6 +15,11 @@ import js.node.buffer.Buffer;
 using promhx.PromiseTools;
 using StringTools;
 
+/**
+ * Why use this class instead of e.g. the npm request module?
+ * Because there are bugs in that module, and sometimes you
+ * need finer control.
+ */
 class RequestPromises
 {
 	public static function get(url :String, ?timeout :Int = 0) :Promise<String>
