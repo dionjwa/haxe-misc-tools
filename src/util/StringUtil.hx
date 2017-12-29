@@ -13,4 +13,9 @@ class StringUtil
 	{
 		return s.endsWith(char) ? s : s + char;
 	}
+
+	public static function removePrefix(s :String, prefix :String) :String
+	{
+		return s.startsWith(prefix) ? s.substr(prefix.length) : s;
+	}
 }
