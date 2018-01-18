@@ -11,8 +11,6 @@ import js.node.buffer.Buffer;
 
 import promhx.Stream;
 
-import t9.util.ColorTraces.*;
-
 using StringTools;
 
 class HttpStreams

@@ -5,8 +5,6 @@ import promhx.base.AsyncBase;
 import promhx.deferred.DeferredPromise;
 import promhx.RetryPromise;
 
-import t9.util.ColorTraces.*;
-
 class PollStreams
 {
 	/**
