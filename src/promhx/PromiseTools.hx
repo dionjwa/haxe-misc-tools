@@ -8,14 +8,14 @@ import promhx.deferred.DeferredPromise;
 
 class PromiseTools
 {
-	public static function promhx<T>(promise :js.npm.bluebird.Bluebird<T, Dynamic>) :Promise<T>
+	public static function promhx<T>(promise :js.Promise<T>) :Promise<T>
 	{
 		var p = new DeferredPromise();
 		promise
 			.then(function(val) {
 				p.resolve(val);
 			})
-			.error(function(err) {
+			.catchError(function(err) {
 				p.boundPromise.reject(err);
 			});
 		return p.boundPromise;
