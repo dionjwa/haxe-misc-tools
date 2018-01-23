@@ -21,6 +21,20 @@ class PromiseTools
 		return p.boundPromise;
 	}
 
+	public static function toJs<T>(promise :Promise<T>) :js.Promise<T>
+	{
+		return new js.Promise(
+			function(resolve, reject) {
+				promise
+					.then(function(val :T) {
+						resolve(val);
+					})
+					.catchError(function(e :Dynamic) {
+						reject(e);
+					});
+			});
+	}
+
 	public static function untilTrue(f :Void->Promise<Bool>, ?interval :Int = 1000, ?max :Int = 100) :Promise<Bool>
 	{
 		var promise = new DeferredPromise();
