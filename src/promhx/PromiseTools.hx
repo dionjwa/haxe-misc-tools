@@ -117,6 +117,13 @@ class PromiseTools
 		});
 	}
 
+	public static function thenVoid(promise :Promise<Dynamic>) :Promise<Void>
+	{
+		return promise.then(function(_) {
+			return;
+		});
+	}
+
 	public static function traceJsonThenTrue(promise :Promise<Dynamic>) :Promise<Bool>
 	{
 		return promise.then(function(val) {
