@@ -10,6 +10,9 @@ class PromiseTools
 {
 	public static function promhx<T>(promise :js.Promise<T>) :Promise<T>
 	{
+		if (promise == null) {
+			throw "Missing promise arg to PromiseTools.promhx conversion";
+		}
 		var p = new DeferredPromise();
 		promise
 			.then(function(val) {
