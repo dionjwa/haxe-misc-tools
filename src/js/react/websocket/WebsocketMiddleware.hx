@@ -17,15 +17,6 @@ import redux.IReducer;
 import redux.Redux;
 import redux.StoreMethods;
 
-enum WebsocketAction
-{
-	Connect;
-	Connected;
-	Disconnect;
-	Reconnect;
-	ServerError(error :Dynamic, e :EnumValue);
-}
-
 /**
 	Redux actions to dispatch from views and match in reducer/middleware
 **/

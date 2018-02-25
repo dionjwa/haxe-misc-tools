@@ -1,4 +1,6 @@
-package js.react.util;
+package js.react.websocket;
+
+import js.react.websocket.WebsocketAction;
 
 import haxe.Json;
 import haxe.Serializer;
