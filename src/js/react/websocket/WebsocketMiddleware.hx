@@ -8,7 +8,7 @@ import js.html.WebSocket;
 import js.html.MessageEvent;
 import js.Browser;
 
-import js.react.util.WebsocketTools;
+import js.react.websocket.WebsocketTools;
 
 import react.ReactUtil.*;
 import redux.StoreMethods;
