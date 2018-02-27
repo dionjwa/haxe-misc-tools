@@ -3,6 +3,7 @@ package js.react.websocket;
 import haxe.Json;
 import haxe.Serializer;
 import haxe.Unserializer;
+import haxe.rtti.Meta;
 
 import js.html.WebSocket;
 import js.html.MessageEvent;
@@ -33,7 +34,7 @@ typedef WebsocketState = {
 }
 
 /**
- * Send some actions to the server.
+ * Send only some actions to the server.
  */
 typedef SendActionFilter=Action->Bool;
 
@@ -50,6 +51,7 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 	var _ws :WebSocket;
 	var _queuedMessages :Array<Action> = [];
 	var _url :String;
+	var _metadataFilterTag :String;
 
 	public function new() {}
 
@@ -59,9 +61,30 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 		return this;
 	}
 
+	/**
+	 * If passed, only send to the server messages
+	 * that return true when passed.
+	 * @param filter :SendActionFilter [description]
+	 */
 	public function setSendFilter(filter :SendActionFilter)
 	{
 		_filter = filter;
+		return this;
+	}
+
+	/**
+	 * If not null, any enum with this metadata, or one of
+	 * the constructors, will be send down the ws wire.
+	 * For example
+	 * @server //All enums are sent
+	 * enum Foo {
+	 * 	    @server //If the Type meta is not present, then only constructors with this value are sent.
+	 * 		Bar;
+	 * }
+	 */
+	public function setMetaTagFilter(tag :String)
+	{
+		_metadataFilterTag = tag;
 		return this;
 	}
 
@@ -106,6 +129,7 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 	public function createMiddleware()
 	{
 		return function (store:StoreMethods<T>) {
+
 			this.store = store;
 			return function (next:Dispatch):Dynamic {
 				return function (action:Action):Dynamic {
@@ -129,13 +153,45 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 						}
 					}
 
-					if (_filter == null || _filter(action)) {
+					if (applyFilter(action) && applyMetaFilter(action)) {
 						sendAction(action);
 					}
 					return next(action);
 				}
 			}
 		}
+	}
+
+	function applyMetaFilter(action :Action) :Bool
+	{
+		if (_metadataFilterTag == null) {
+			return true;
+		}
+		var enumType = Type.resolveEnum(action.type);
+		//No enum, cannot filter
+		if (enumType == null) {
+			return true;
+		}
+
+		var mt = Meta.getType(enumType);
+		if (mt != null && Reflect.hasField(mt, _metadataFilterTag)) {
+			return true;
+		}
+
+		var enMeta = Meta.getFields(enumType);
+		var name = Type.enumConstructor(action.value);
+		if (enMeta != null
+			&& Reflect.hasField(enMeta, name)
+			&& Reflect.hasField(Reflect.field(enMeta, name), _metadataFilterTag)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	function applyFilter(action :Action) :Bool
+	{
+		return _filter == null || _filter(action);
 	}
 
 	function sendAction(action :Action)
