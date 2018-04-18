@@ -570,7 +570,7 @@ class DockerTools
 	{
 		var promise = new DeferredPromise();
 
-		container.logs({stdout:true, stderr:true}, function(err, stream) {
+		container.logs({stdout:true, stderr:true, follow:true}, function(err, stream) {
 			if (err != null) {
 				promise.boundPromise.reject(err);
 				return;
@@ -630,7 +630,7 @@ class DockerTools
 	{
 		var promise = new DeferredPromise();
 
-		container.logs({stdout:true, stderr:true}, function(err, stream) {
+		container.logs({stdout:true, stderr:true, follow:true}, function(err, stream) {
 			if (err != null) {
 				promise.boundPromise.reject(err);
 				return;
@@ -664,7 +664,7 @@ class DockerTools
 	{
 		var promise = new DeferredPromise();
 
-		container.logs({stdout:true, stderr:true}, function(err, stream) {
+		container.logs({stdout:true, stderr:true, follow:true}, function(err, stream) {
 			if (err != null) {
 				promise.boundPromise.reject(err);
 				return;
@@ -717,7 +717,7 @@ class DockerTools
 		var promise = new DeferredPromise();
 		//Filter the header
 		//https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/
-		container.logs({stdout:isStdOut, stderr:!isStdOut}, function(err, stream) {
+		container.logs({stdout:isStdOut, stderr:!isStdOut, follow:true}, function(err, stream) {
 			if (err != null) {
 				promise.boundPromise.reject(err);
 				return;
