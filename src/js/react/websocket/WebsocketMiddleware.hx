@@ -206,15 +206,9 @@ class WebsocketMiddleware<T:({ws:WebsocketState})>
 	function connect()
 	{
 		disconnect();
-		var port = Browser.location.port != null ? ":" + Browser.location.port : "";
-#if WEBSOCKET_MIDDLEWARE_PORT
-		//Force the debug websocket to avoid clobbering the livereloadx websocket
-		port = util.MacroUtils.getDefine('WEBSOCKET_MIDDLEWARE_PORT');
-		port = ':${port}';
-#end
-		var protocol = Browser.location.protocol == "https:" ? "wss:" : "ws:";
-		var wsUrl = '${protocol}//${Browser.location.hostname}${port}${_url}';
-		_ws = new WebSocket(wsUrl);
+		_ws = new WebSocket(_url);
+		//React hot-loading can mess with this, so we cache
+		//the websocket to the window object
 		Reflect.setField(Browser.window, 'WS_INSTANCE', _ws);
 		_ws.onerror = onWebsocketError;
 		_ws.onopen = onWebsocketOpen;
