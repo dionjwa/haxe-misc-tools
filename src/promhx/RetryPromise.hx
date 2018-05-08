@@ -42,17 +42,12 @@ class RetryPromise
 			p.catchError(function(err) {
 				if (attempts < maxRetryAttempts) {
 					if (!supressLogs) {
-						var errString = if (Buffer.isBuffer(err)) {
-							cast(err, js.node.Buffer).toString();
-						} else {
-							err;
-						}
-						Log.debug('$logPrefix Failed attempt $attempts err=${errString}');
+						Log.debug('$logPrefix Failed attempt $attempts err=${errToString(err)}');
 					}
 					js.Node.setTimeout(retryLocal, intervalMilliseconds);
 				} else {
 					if (!supressLogs) {
-						Log.error('$logPrefix Failed all $maxRetryAttempts err=${Json.stringify(err)}');
+						Log.error('$logPrefix Failed all $maxRetryAttempts err=${errToString(err)}');
 					}
 					deferred.boundPromise.reject(err);
 				}
@@ -81,13 +76,13 @@ class RetryPromise
 			p.catchError(function(err) {
 				if (attempts < maxRetryAttempts) {
 					if (!supressLogs) {
-						Log.debug('$logPrefix Failed attempt $attempts err=${Json.stringify(err)}');
+						Log.debug('$logPrefix Failed attempt $attempts err=${errToString(err)}');
 					}
 					js.Node.setTimeout(retryLocal, currentDelay);
 					currentDelay *= 2;
 				} else {
 					if (!supressLogs) {
-						Log.error('$logPrefix Failed all $maxRetryAttempts err=${Json.stringify(err)}');
+						Log.error('$logPrefix Failed all $maxRetryAttempts err=${errToString(err)}');
 					}
 					deferred.boundPromise.reject(err);
 				}
@@ -95,5 +90,17 @@ class RetryPromise
 		}
 		retryLocal();
 		return deferred.boundPromise;
+	}
+
+	inline static function errToString(err :Dynamic) :String
+	{
+		if (err == null) {
+			return "null";
+		}
+		return if (Buffer.isBuffer(err)) {
+			cast(err, js.node.Buffer).toString();
+		} else {
+			Json.stringify(err);
+		}
 	}
 }
