@@ -112,7 +112,6 @@ class RedisPromises
 
 	public static function sadd(redis :RedisClient, set :String, members :Array<String>) :Promise<Int>
 	{
-		Assert.notNull(set);
 		if (members == null || members.length == 0) {
 			return Promise.promise(0);
 		}
