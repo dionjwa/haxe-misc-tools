@@ -418,7 +418,7 @@ class DockerTools
 		var promise = new DeferredPromise();
 		docker.pull(repoTag, opts, function(err, stream) {
 			if (err != null) {
-				promise.boundPromise.reject({error:err, log:'docker.pullImage', repoTag:repoTag});
+				promise.boundPromise.reject('$err');
 				return;
 			}
 			function onFinished(finishedErr, output) {
