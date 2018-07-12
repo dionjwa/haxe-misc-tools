@@ -19,7 +19,7 @@ class RedisPromises
 	inline public static function info(redis :RedisClient) :Promise<Dynamic>
 	{
 		var promise = new promhx.CallbackPromise();
-		redis.info(keyString, promise.cb2);
+		redis.info(promise.cb2);
 		return cast promise;
 	}
 
