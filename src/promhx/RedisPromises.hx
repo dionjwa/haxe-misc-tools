@@ -16,6 +16,13 @@ using promhx.PromiseTools;
 
 class RedisPromises
 {
+	inline public static function info(redis :RedisClient) :Promise<Dynamic>
+	{
+		var promise = new promhx.CallbackPromise();
+		redis.info(keyString, promise.cb2);
+		return cast promise;
+	}
+
 	inline public static function keys(redis :RedisClient, keyString :String) :Promise<Array<String>>
 	{
 		var promise = new promhx.CallbackPromise();
