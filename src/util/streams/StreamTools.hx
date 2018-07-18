@@ -5,10 +5,28 @@ import haxe.extern.EitherType;
 import js.node.Buffer;
 import js.node.stream.Transform;
 import js.node.stream.Readable;
+import js.node.stream.Writable;
 import js.node.stream.Duplex;
 
 class StreamTools
 {
+	public static function createStringConsumer(f :String->Void) :IWritable
+	{
+		var writable = untyped __js__('new require("stream").Writable({decodeStrings:false,objectMode:false})');
+		untyped writable._write = function(chunk :Buffer, encoding :String, done :Null<js.Error>->Void) {
+			if (chunk != null) {
+				try {
+					f(chunk.toString('utf8'));
+				} catch(err :Dynamic) {
+					done(err);
+					return;
+				}
+			}
+			done(null);
+		};
+		return cast writable;
+	}
+
 	public static function createTransformStream<T>(f :T->T) :IDuplex
 	{
 		var transform = untyped __js__('new require("stream").Transform({decodeStrings:false,objectMode:false})');
