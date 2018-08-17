@@ -45,7 +45,7 @@ class MacroUtils
 			if (!sys.FileSystem.exists(dotEnvPath)) {
 				return {expr: EConst(CString(def)), pos : Context.currentPos()};
 			}
-			var line :String = sys.io.File.getContent(p)
+			var line :String = sys.io.File.getContent(dotEnvPath)
 				.split('\n')
 				.find(function(line :String) return line.startsWith('${key}='));
 			if (line != null) {
