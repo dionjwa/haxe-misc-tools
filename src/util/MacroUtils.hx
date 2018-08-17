@@ -42,9 +42,8 @@ class MacroUtils
 	macro public static function getDotEnvValue(key :String, ?def :String, ?dotEnvPath :String = '.env') :Expr
 	{
 		try {
-			var p = haxe.macro.Context.resolvePath(dotEnvPath);
-			if (!sys.FileSystem.exists(p)) {
-				return {expr: EConst(CString(def)) , pos : Context.currentPos()};
+			if (!sys.FileSystem.exists(dotEnvPath)) {
+				return {expr: EConst(CString(def)), pos : Context.currentPos()};
 			}
 			var line :String = sys.io.File.getContent(p)
 				.split('\n')
