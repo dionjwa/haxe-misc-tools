@@ -68,4 +68,16 @@ class ObjectTools
 			}
 		}
 	}
+
+	public static function removeNulls<T>(obj :T) :T
+	{
+		if (obj != null) {
+			for (field in Reflect.fields(obj)) {
+				if (Reflect.field(obj, field) == null) {
+					Reflect.deleteField(obj, field);
+				}
+			}
+		}
+		return obj;
+	}
 }

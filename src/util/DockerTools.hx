@@ -919,7 +919,6 @@ class DockerTools
 	{
 		return DockerPromises.listContainers(docker, {})
 			.pipe(function(containerData) {
-				trace(containerData);
 				for (container in containerData) {
 					if (container.Id == containerId) {
 						return Promise.promise(container.HostConfig.NetworkMode);
