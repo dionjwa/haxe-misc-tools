@@ -259,4 +259,11 @@ class DockerPromises
 		container.putArchive(input, opts, promise.cb2);
 		return promise;
 	}
+
+	public static function copyOut(container :DockerContainer, opts :{path:String}) :Promise<IReadable>
+	{
+		var promise = new promhx.CallbackPromise();
+		container.getArchive(opts, promise.cb2);
+		return promise;
+	}
 }
