@@ -217,6 +217,21 @@ class RedisPromises
 		return promise;
 	}
 
+	public static function zscore(redis :RedisClient, key :String, value :String) :Promise<Float>
+	{
+		var promise = new promhx.CallbackPromise();
+		redis.zscore(key, value, promise.cb2);
+
+		return promise
+			.then(function(scoreString) {
+				if (scoreString == null || scoreString == "") {
+					return null;
+				} else {
+					return Std.parseFloat(scoreString);
+				}
+			});
+	}
+
 	public static function lpush(redis :RedisClient, key :String, value :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise();
