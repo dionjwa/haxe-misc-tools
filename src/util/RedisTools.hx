@@ -210,13 +210,17 @@ class RedisTools
 				});
 				var result = new TypedDynamicAccess<String,EitherType<String,Float>>();
 				for (key in map.keys()) {
-					var val = Std.parseFloat(map[key]);
-					if (Math.isNaN(val)) {
-						if (!key.startsWith('#') && key.trim() != '') {
-							result[key.trim()] = map[key].trim();
-						}
+					if (key.endsWith('_human') || key.endsWith('_perc')) {
+						result[key.trim()] = map[key].trim();
 					} else {
-						result[key.trim()] = val;
+						var val = Std.parseFloat(map[key]);
+						if (Math.isNaN(val)) {
+							if (!key.startsWith('#') && key.trim() != '') {
+								result[key.trim()] = map[key].trim();
+							}
+						} else {
+							result[key.trim()] = val;
+						}
 					}
 				}
 				return result;
