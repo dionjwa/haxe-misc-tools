@@ -8,6 +8,7 @@ package util;
  */
 
 import haxe.Json;
+import haxe.extern.EitherType;
 
 import js.npm.Redis;
 import js.npm.redis.RedisClient;
@@ -17,6 +18,11 @@ import promhx.Stream;
 import promhx.RedisPromises;
 import promhx.deferred.DeferredPromise;
 import promhx.deferred.DeferredStream;
+
+import util.TypedDynamicAccess;
+
+using StringTools;
+using Lambda;
 
 @:enum
 abstract PubSubChannel(String)
@@ -190,5 +196,30 @@ class RedisTools
 			deferred.resolve(true);
 		});
 		return deferred.boundPromise;
+	}
+
+	public static function getInfoObject(client :RedisClient) :Promise<TypedDynamicAccess<String,EitherType<String,Float>>>
+	{
+		return RedisPromises.info(client)
+			.then(function(info :String) {
+				var lines = info.split('\n');
+				var map = new Map<String,String>();
+				lines.iter(function(line) {
+					var tokens = line.split(':');
+					map[tokens[0]] = tokens[1];
+				});
+				var result = new TypedDynamicAccess<String,EitherType<String,Float>>();
+				for (key in map.keys()) {
+					var val = Std.parseFloat(map[key]);
+					if (Math.isNaN(val)) {
+						if (!key.startsWith('#') && key.trim() != '') {
+							result[key.trim()] = map[key].trim();
+						}
+					} else {
+						result[key.trim()] = val;
+					}
+				}
+				return result;
+			});
 	}
 }
