@@ -223,6 +223,7 @@ class RedisTools
 						}
 					}
 				}
+				result['info'] = cast info.split('\n');
 				return result;
 			});
 	}

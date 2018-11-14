@@ -6,7 +6,7 @@ import js.node.Path;
 import js.node.Http;
 import js.node.http.*;
 import js.npm.busboy.Busboy;
-import js.npm.fsextended.FsExtended;
+import js.npm.fsextra.FsExtra;
 
 import promhx.Promise;
 import promhx.CallbackPromise;
@@ -134,7 +134,7 @@ class MultiformTools
 	inline static function ensureDir(path :String) :Promise<Bool>
 	{
 		var promise = new CallbackPromise();
-		FsExtended.ensureDir(path, null, promise.cb1);
+		FsExtra.ensureDir(path, null, promise.cb1);
 		return promise;
 	}
 }
