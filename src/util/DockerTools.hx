@@ -67,7 +67,8 @@ class DockerTools
 		?volumes :Array<MountedDockerVolumeDef>,
 		?outStream :IWritable,
 		?errStream :IWritable,
-		?joinHostNetwork :Bool = false) :Promise<DockerRunResult>
+		?joinHostNetwork :Bool = false,
+		?skipImageCheck :Bool = false) :Promise<DockerRunResult>
 	{
 		var result :DockerRunResult = {
 			StatusCode: null,
@@ -87,7 +88,7 @@ class DockerTools
 			Image: image,
 			HostConfig: {},
 			Env: env != null ? env.keys().map(function(key) return '${key}=${env[key]}') : null,
-			Tty: false,//needed for splitting stdout/err
+			Tty: false, // needed for splitting stdout/err
 			AttachStdout: true,
 			AttachStderr: true,
 		}
@@ -117,85 +118,84 @@ class DockerTools
 		});
 		grabberErrStream.pipe(errStream);
 
-		return Promise.promise(true)
+		return Promise.whenAll([
+				function() {
+					if (joinHostNetwork) {
+						return getThisContainerName()
+							.then(function(containerName) {
+								var hostContainerName = containerName.startsWith('/') ? containerName.substr(1) : containerName;
+								createOptions.HostConfig.NetworkMode = 'container:${hostContainerName}';
+								return true;
+							});
+					} else {
+						return Promise.promise(true);
+					}
+				}(),
+				function() {
+					if (skipImageCheck) {
+						return Promise.promise(true);
+					} else {
+						return RetryPromise.retryRegular(function() return DockerPromises.ensureImage(docker, createOptions.Image), 2, 2000);
+					}
+				}(),
+			]).thenTrue()
 			.pipe(function(_) {
-				if (joinHostNetwork) {
-					/**
-					 * If running locally in a docker-compose stack, auto-join the host
-					 * network. This allows docker-compose service names for addresses
-					 * without jumping through hoops.
-					 */
-					return getThisContainerName()
-						.then(function(containerName) {
-							var hostContainerName = containerName.startsWith('/') ? containerName.substr(1) : containerName;
-							createOptions.HostConfig.NetworkMode = 'container:${hostContainerName}';
-							return true;
-						});
-				} else {
-					return Promise.promise(true);
-				}
-			})
-			.pipe(function(_) {
-				return DockerPromises.ensureImage(docker, createOptions.Image)
-					.pipe(function(_) {
-
-						var promise = new DeferredPromise();
+				var promise = new DeferredPromise();
 #if DockerDataToolsDebug
-						traceMagenta('command=${op.command.command} createOptions=${createOptions} startOptions=${startOptions}');
+				traceMagenta('command=${op.command.command} createOptions=${createOptions} startOptions=${startOptions}');
 #end
-						docker.run(image, command, [grabberOutStream, grabberErrStream], createOptions, startOptions, function(err, dataRun, container) {
+				docker.run(image, command, [grabberOutStream, grabberErrStream], createOptions, startOptions, function(err, dataRun, container) {
 #if DockerDataToolsDebug
-							traceMagenta('docker run result err=$err data=$dataRun');
-							traceCyan('volumeOperation created container=${container.id}');
+					traceMagenta('docker run result err=$err data=$dataRun');
+					traceCyan('volumeOperation created container=${container.id}');
 #end
 
-							result.StatusCode = dataRun != null ? dataRun.StatusCode : null;
-							result.stdout = outBuffer.toString() != "" ? outBuffer.toString() : null;
-							result.stderr = errBuffer.toString() != "" ? errBuffer.toString() : null;
-							if (err != null) {
-								traceRed('Error in docker run err=${Json.stringify(err)}');
-								result.error = err;
-								promise.boundPromise.reject(result);
-								return;
+					result.StatusCode = dataRun != null ? dataRun.StatusCode : null;
+					result.stdout = outBuffer.toString() != "" ? outBuffer.toString() : null;
+					result.stderr = errBuffer.toString() != "" ? errBuffer.toString() : null;
+					if (err != null) {
+						traceRed('Error in docker run err=${Json.stringify(err)}');
+						result.error = err;
+						promise.boundPromise.reject(result);
+						return;
+					}
+					if (container != null) {
+						container.remove(function(errRemove, dataRemove) {
+#if DockerDataToolsDebug
+							traceCyan('volumeOperation removed container=${container.id} errRemove=$errRemove data=$dataRemove');
+#end
+							if (promise != null) {
+								if (err != null) {
+#if DockerDataToolsDebug
+									traceRed(err);
+#end
+									result.error = err;
+									promise.boundPromise.reject(result);
+								} else if (dataRun.StatusCode != 0) {
+#if DockerDataToolsDebug
+									traceRed('Non-zero StatusCode data:$dataRun');
+#end
+									result.error = 'Non-zero StatusCode data:$dataRun';
+									promise.boundPromise.reject(result);
+								} else {
+									promise.resolve(result);
+								}
+								promise = null;
 							}
-							if (container != null) {
-								container.remove(function(errRemove, dataRemove) {
-#if DockerDataToolsDebug
-									traceCyan('volumeOperation removed container=${container.id} errRemove=$errRemove data=$dataRemove');
-#end
-									if (promise != null) {
-										if (err != null) {
-#if DockerDataToolsDebug
-											traceRed(err);
-#end
-											result.error = err;
-											promise.boundPromise.reject(result);
-										} else if (dataRun.StatusCode != 0) {
-#if DockerDataToolsDebug
-											traceRed('Non-zero StatusCode data:$dataRun');
-#end
-											result.error = 'Non-zero StatusCode data:$dataRun';
-											promise.boundPromise.reject(result);
-										} else {
-											promise.resolve(result);
-										}
-										promise = null;
-									}
-								});
-							} else {
-								result.error = 'No container';
-								promise.boundPromise.reject(result);
-							}
-						})
-						.on('container', function (container) {
-						})
-						.on('stream', function (stream) {
-						})
-						.on('data', function (data) {
 						});
+					} else {
+						result.error = 'No container';
+						promise.boundPromise.reject(result);
+					}
+				})
+				.on('container', function (container) {
+				})
+				.on('stream', function (stream) {
+				})
+				.on('data', function (data) {
+				});
 
-						return promise.boundPromise;
-					});
+				return promise.boundPromise;
 			});
 	}
 
@@ -676,6 +676,8 @@ class DockerTools
 			modem.demuxStream(stream, passThroughStdout, passThroughStderr);
 
 			stream.once(ReadableEvent.End, function() {
+				// stdout.end();
+				// stderr.end();
 				Node.setTimeout(function() {
 					passThroughStdout.end();
 					passThroughStderr.end();
@@ -901,23 +903,36 @@ class DockerTools
 	/**
 	 * Assuming this process is in a container, get the container id.
 	 */
+	static var CACHED_CONTAINER_ID :String;
 	public static function getContainerId() :String
 	{
+		if (CACHED_CONTAINER_ID != null) {
+			return CACHED_CONTAINER_ID;
+		}
 		if (isInsideContainer()) {
 			var stdout :String = js.node.ChildProcess.execSync("cat /proc/1/cgroup | grep 'docker/' | tail -1 | sed 's/^.*\\///'", {stdio:['ignore','pipe','ignore']}) + "";
-			return stdout.trim();
+			CACHED_CONTAINER_ID = stdout.trim();
+			return CACHED_CONTAINER_ID;
 		} else {
 			return null;
 		}
 	}
 
+	static var CACHED_CONTAINER_NAME :String;
 	public static function getThisContainerName() :Promise<String>
 	{
+		if (CACHED_CONTAINER_NAME != null) {
+			return Promise.promise(CACHED_CONTAINER_NAME);
+		}
 		var containerId = getContainerId();
 		if (containerId == null) {
 			return Promise.promise(null);
 		}
-		return getContainerName(new Docker({socketPath:'/var/run/docker.sock'}), containerId);
+		return getContainerName(new Docker({socketPath:'/var/run/docker.sock'}), containerId)
+			.then(function(name) {
+				CACHED_CONTAINER_NAME = name;
+				return CACHED_CONTAINER_NAME;
+			});
 	}
 
 	public static function getThisContainerNetwork() :Promise<String>
