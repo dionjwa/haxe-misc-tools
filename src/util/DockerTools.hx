@@ -70,6 +70,7 @@ class DockerTools
 		?joinHostNetwork :Bool = false,
 		?skipImageCheck :Bool = false) :Promise<DockerRunResult>
 	{
+		//Create a final result object
 		var result :DockerRunResult = {
 			StatusCode: null,
 			stdout: null,
@@ -77,7 +78,7 @@ class DockerTools
 			error: null
 		}
 		var promise = new DeferredPromise();
-#if DockerDataToolsDebug
+#if DebugDockerDataTools
 		outStream = outStream == null ? Node.process.stdout : outStream;
 		errStream = errStream == null ? Node.process.stderr : errStream;
 #else
@@ -86,6 +87,7 @@ class DockerTools
 #end
 		var createOptions :CreateContainerOptions = {
 			Image: image,
+			Cmd: command,
 			HostConfig: {},
 			Env: env != null ? env.keys().map(function(key) return '${key}=${env[key]}') : null,
 			Tty: false, // needed for splitting stdout/err
@@ -102,8 +104,6 @@ class DockerTools
 			}
 		}
 
-		var startOptions :StartContainerOptions = {};
-
 		var outBuffer = new StringBuf();
 		var grabberOutStream = StreamTools.createTransformStream(function(s) {
 			outBuffer.add(s);
@@ -118,6 +118,9 @@ class DockerTools
 		});
 		grabberErrStream.pipe(errStream);
 
+		var container :DockerContainer = null;
+
+		//Do some optional stuff in parallel
 		return Promise.whenAll([
 				function() {
 					if (joinHostNetwork) {
@@ -139,63 +142,86 @@ class DockerTools
 					}
 				}(),
 			]).thenTrue()
+			//Now do the actual creating/running/cleanup of the container
 			.pipe(function(_) {
 				var promise = new DeferredPromise();
-#if DockerDataToolsDebug
-				traceMagenta('command=${op.command.command} createOptions=${createOptions} startOptions=${startOptions}');
+#if DebugDockerDataTools
+				traceMagenta('docker.createContainer createOptions=${createOptions}');
 #end
-				docker.run(image, command, [grabberOutStream, grabberErrStream], createOptions, startOptions, function(err, dataRun, container) {
-#if DockerDataToolsDebug
-					traceMagenta('docker run result err=$err data=$dataRun');
-					traceCyan('volumeOperation created container=${container.id}');
-#end
-
-					result.StatusCode = dataRun != null ? dataRun.StatusCode : null;
-					result.stdout = outBuffer.toString() != "" ? outBuffer.toString() : null;
-					result.stderr = errBuffer.toString() != "" ? errBuffer.toString() : null;
+				docker.createContainer(createOptions, function (err, containerCreated) {
 					if (err != null) {
-						traceRed('Error in docker run err=${Json.stringify(err)}');
-						result.error = err;
-						promise.boundPromise.reject(result);
+						traceRed('Error in docker createContainer err=${Json.stringify(err)}');
+						promise.boundPromise.reject(err);
 						return;
 					}
-					if (container != null) {
-						container.remove(function(errRemove, dataRemove) {
-#if DockerDataToolsDebug
-							traceCyan('volumeOperation removed container=${container.id} errRemove=$errRemove data=$dataRemove');
+					container = containerCreated;
+
+					container.attach({stream: true, stdout: true, stderr: true}, function (err, stream) {
+						if (err != null) {
+							traceRed('Error in docker attach err=${Json.stringify(err)}');
+							promise.boundPromise.reject(err);
+							return;
+						}
+						//dockerode may demultiplex attach streams for you :)
+						container.modem.demuxStream(stream, grabberOutStream, grabberErrStream);
+					});
+
+#if DebugDockerDataTools
+					traceMagenta('container start');
 #end
-							if (promise != null) {
-								if (err != null) {
-#if DockerDataToolsDebug
-									traceRed(err);
+					container.start(function(err, dataStart) {
+						if (err != null) {
+							traceRed('Error in docker start err=${Json.stringify(err)}');
+							promise.boundPromise.reject(err);
+							return;
+						}
+#if DebugDockerDataTools
+						traceMagenta('container started');
 #end
-									result.error = err;
-									promise.boundPromise.reject(result);
-								} else if (dataRun.StatusCode != 0) {
-#if DockerDataToolsDebug
-									traceRed('Non-zero StatusCode data:$dataRun');
-#end
-									result.error = 'Non-zero StatusCode data:$dataRun';
-									promise.boundPromise.reject(result);
-								} else {
-									promise.resolve(result);
-								}
-								promise = null;
+						container.wait(function(err, dataWait) {
+							if (err != null) {
+								traceRed('Error in docker wait err=${Json.stringify(err)}');
+								promise.boundPromise.reject(err);
+								return;
 							}
+
+							result.StatusCode = dataWait != null ? dataWait.StatusCode : null;
+							result.stdout = outBuffer.toString() != "" ? outBuffer.toString() : null;
+							result.stderr = errBuffer.toString() != "" ? errBuffer.toString() : null;
+#if DebugDockerDataTools
+							traceMagenta('container ${Json.stringify(result, null, "  ")}');
+#end
+							promise.resolve(true);
 						});
-					} else {
-						result.error = 'No container';
-						promise.boundPromise.reject(result);
-					}
-				})
-				.on('container', function (container) {
-				})
-				.on('stream', function (stream) {
-				})
-				.on('data', function (data) {
+					});
 				});
 
 				return promise.boundPromise;
+			}).thenTrue()
+			.errorPipe(function(err) {
+				result.error = err;
+				return Promise.promise(true);
+			})
+			.then(function(_) {
+				if (container != null) {
+#if DebugDockerDataTools
+					traceMagenta('container removing');
+#end
+					container.remove(function(errRemove, dataRemove) {
+#if DebugDockerDataTools
+						traceCyan('volumeOperation removed container=${container.id} errRemove=$errRemove data=$dataRemove');
+#end
+							if (errRemove != null) {
+#if DebugDockerDataTools
+								traceRed(errRemove);
+#end
+							}
+					});
+				}
+#if DebugDockerDataTools
+				traceMagenta('container returning results');
+#end
+				return result;
 			});
 	}
 
