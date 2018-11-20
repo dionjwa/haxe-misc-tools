@@ -5,21 +5,26 @@ import t9.abstracts.net.*;
 using StringTools;
 
 typedef DockerUrlBlob = {
-	var name:String;
-	@:optional var username :String;
-	@:optional var registryhost :Host;
+	var repository :String;
+	@:optional var registry :Host;
 	@:optional var tag :String;
 }
+
+/**
+ * Docker URLs are confusing.
+ * Assuming:
+ * [registry/][namespace/][repository]:<tag>
+ * or
+ * [registry/]<name>:<tag>
+ */
 
 abstract DockerUrl(String) to String from String
 {
 	inline public function new (s :String)
 		this = s;
 
-	public var tag(get, set) :String;
-	public var registryhost(get, set) :Host;
-	public var username(get, set) :String;
-	public var name(get, set) :String;
+	public var tag(get, never) :String;
+	public var registry(get, never) :Host;
 	public var repository(get, never) :String;
 
 	inline public function noTag() :DockerUrl
@@ -37,9 +42,7 @@ abstract DockerUrl(String) to String from String
 	inline public function get_repository() :String
 	{
 		var u = DockerUrlTools.parseDockerUrl(this);
-		u.tag = null;
-		u.registryhost = null;
-		return DockerUrlTools.joinDockerUrl(u);
+		return u.repository;
 	}
 
 	inline public function set_tag(tag :String) :String
@@ -56,46 +59,18 @@ abstract DockerUrl(String) to String from String
 		return u.tag;
 	}
 
-	inline public function set_registryhost(registryhost :Host) :Host
+	inline public function set_registry(registry :Host) :Host
 	{
 		var u = DockerUrlTools.parseDockerUrl(this);
-		u.registryhost = registryhost;
+		u.registry = registry;
 		this = DockerUrlTools.joinDockerUrl(u);
 		return tag;
 	}
 
-	inline public function get_registryhost() :Host
+	inline public function get_registry() :Host
 	{
 		var u = DockerUrlTools.parseDockerUrl(this);
-		return u.registryhost;
-	}
-
-	inline public function set_username(username :String) :String
-	{
-		var u = DockerUrlTools.parseDockerUrl(this);
-		u.username = username;
-		this = DockerUrlTools.joinDockerUrl(u);
-		return tag;
-	}
-
-	inline public function get_username() :String
-	{
-		var u = DockerUrlTools.parseDockerUrl(this);
-		return u.username;
-	}
-
-	inline public function set_name(name :String) :String
-	{
-		var u = DockerUrlTools.parseDockerUrl(this);
-		u.name = name;
-		this = DockerUrlTools.joinDockerUrl(u);
-		return tag;
-	}
-
-	inline public function get_name() :String
-	{
-		var u = DockerUrlTools.parseDockerUrl(this);
-		return u.name;
+		return u.registry;
 	}
 }
 
@@ -114,55 +89,57 @@ class DockerUrlTools
 
 	public static function joinDockerUrl(u :DockerUrlBlob, ?includeTag :Bool = true) :String
 	{
-		return (u.registryhost != null ? u.registryhost + '/' : '')
-			+ (u.username != null ? u.username + '/' : '')
-			+ u.name
+		return (u.registry != null ? u.registry + '/' : '')
+			+ u.repository
 			+ (u.tag != null && includeTag ? ':' + u.tag : '');
 	}
 
 	public static function parseDockerUrl(s :String) :DockerUrlBlob
 	{
 		s = s.trim();
-		var r = ~/(.*\/)?([a-z0-9_]+)(:[a-z0-9_\.-]+)?/i;
+		var r = ~/(.*\/)?([a-z0-9_-]+)(:[a-z0-9_\.-]+)?/i;
 		r.match(s);
-		var registryAndUsername = r.matched(1);
-		var name = r.matched(2);
+		var registryAndNamespace = r.matched(1);
+		var repository = r.matched(2);
 		var tag = r.matched(3);
 		if (tag != null) {
 			tag = tag.substr(1);
 		}
-		registryAndUsername = registryAndUsername != null ?registryAndUsername.substr(0, registryAndUsername.length - 1) : null;
-		var username :String = null;
-		var registryHost :Host = null;
-		if (registryAndUsername != null) {
-			var tokens = registryAndUsername.split('/');
+		registryAndNamespace = registryAndNamespace != null ?registryAndNamespace.substr(0, registryAndNamespace.length - 1) : null;
+		var namespace :String = null;
+		var registry :Host = null;
+		if (registryAndNamespace != null) {
+			var tokens = registryAndNamespace.split('/');
 			if (tokens.length > 1) {
-				username = tokens.pop();
-				registryHost = tokens.length > 0 ? tokens.join('/') : null;
+				namespace = tokens.pop();
+				registry = tokens.length > 0 ? tokens.join('/') : null;
 			} else {
-				registryHost = tokens.join('/');
+				//If the registry and namespace does not contain /
+				//and there's no '.'/':' then there's no registry
+				if (registryAndNamespace.indexOf('.') > -1 || registryAndNamespace.indexOf(':') > -1) {
+					registry = registryAndNamespace;
+				} else {
+					namespace = registryAndNamespace;
+				}
 			}
 		}
+
 		var url :DockerUrlBlob = {
-			name: name
+			repository: namespace == null ? repository : '${namespace}/${repository}',
 		}
 		if (tag != null) {
 			url.tag = tag;
 		}
-		if (username != null) {
-			url.username = username;
-		}
-		if (registryHost != null) {
-			url.registryhost = registryHost;
+		if (registry != null) {
+			url.registry = registry;
 		}
 		return url;
 	}
 
 	public static function getRepository(u :DockerUrlBlob, ?includeTag :Bool = true) :String
 	{
-		return (u.registryhost != null ? u.registryhost + '/' : '')
-			+ (u.username != null ? u.username + '/' : '')
-			+ u.name
+		return (u.registry != null ? u.registry + '/' : '')
+			+ u.repository
 			+ (u.tag != null && includeTag ? ':' + u.tag : '');
 	}
 }
