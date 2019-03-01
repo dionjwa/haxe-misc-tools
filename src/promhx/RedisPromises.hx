@@ -6,13 +6,10 @@ import promhx.Deferred;
 import promhx.Promise;
 import promhx.CallbackPromise;
 
-#if nodejs
-import js.npm.redis.RedisClient;
-#else
-typedef RedisClient = Dynamic;
-#end
-
 using promhx.PromiseTools;
+
+typedef RedisClient = Dynamic;
+typedef RedisString = String;
 
 class RedisPromises
 {
@@ -266,7 +263,7 @@ class RedisPromises
 	public static function deleteAllKeys(client :RedisClient) :Promise<Bool>
 	{
 		var promise = new promhx.deferred.DeferredPromise();
-		client.keys('*', function(err, keys) {
+		client.keys('*', function(err, keys :Array<String>) {
 			var commands :Array<Array<String>> = [];
 			for (key in keys) {
 				commands.push(['del', key]);
