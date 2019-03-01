@@ -35,21 +35,21 @@ class RedisPromises
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.setex(key, time, val, promise.cb2);
-		return promise.then(function(s) return s.asString());
+		return promise.then(function(s) return s);
 	}
 
 	inline public static function get(redis :Dynamic, key :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.get(key, promise.cb2);
-		return promise.then(function(s) return s.asString());
+		return promise.then(function(s) return s);
 	}
 
 	inline public static function hget(redis :Dynamic, hashkey :String, hashField :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.hget(hashkey, hashField, promise.cb2);
-		return promise.then(function(s) return s.asString());
+		return promise.then(function(s) return s);
 	}
 
 	inline public static function hgetall(redis :Dynamic, hashkey :String) :Promise<Dynamic>
@@ -254,7 +254,7 @@ class RedisPromises
 		var fieldValsS :Dynamic<String> = cast fieldVals;
 		var cb :Null<js.Error>->Void = cast promise.cb2;
 		redis.hmset(cast keyS, cast fieldValsS, cb);
-		return promise.then(function(s) return s.asString());
+		return promise.then(function(s) return s);
 	}
 
 	public static function deleteAllKeys(redis :Dynamic) :Promise<Bool>
