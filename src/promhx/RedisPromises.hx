@@ -8,75 +8,72 @@ import promhx.CallbackPromise;
 
 using promhx.PromiseTools;
 
-typedef RedisClient = Dynamic;
-typedef RedisString = String;
-
 class RedisPromises
 {
-	inline public static function info(redis :RedisClient) :Promise<Dynamic>
+	inline public static function info(redis :Dynamic) :Promise<Dynamic>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.info(promise.cb2);
 		return cast promise;
 	}
 
-	inline public static function keys(redis :RedisClient, keyString :String) :Promise<Array<String>>
+	inline public static function keys(redis :Dynamic, keyString :String) :Promise<Array<String>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.keys(keyString, promise.cb2);
 		return cast promise;
 	}
 
-	inline public static function set(redis :RedisClient, key :String, val :String) :Promise<Bool>
+	inline public static function set(redis :Dynamic, key :String, val :String) :Promise<Bool>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.set(key, val, promise.cb2);
 		return promise.thenTrue();
 	}
 
-	inline public static function setex(redis :RedisClient, key :String, time :Int, val :String) :Promise<String>
+	inline public static function setex(redis :Dynamic, key :String, time :Int, val :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.setex(key, time, val, promise.cb2);
 		return promise.then(function(s) return s.asString());
 	}
 
-	inline public static function get(redis :RedisClient, key :String) :Promise<String>
+	inline public static function get(redis :Dynamic, key :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.get(key, promise.cb2);
 		return promise.then(function(s) return s.asString());
 	}
 
-	inline public static function hget(redis :RedisClient, hashkey :String, hashField :String) :Promise<String>
+	inline public static function hget(redis :Dynamic, hashkey :String, hashField :String) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.hget(hashkey, hashField, promise.cb2);
 		return promise.then(function(s) return s.asString());
 	}
 
-	inline public static function hgetall(redis :RedisClient, hashkey :String) :Promise<Dynamic>
+	inline public static function hgetall(redis :Dynamic, hashkey :String) :Promise<Dynamic>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.hgetall(hashkey, promise.cb2);
 		return promise;
 	}
 
-	inline public static function hkeys(redis :RedisClient, hashkey :String) :Promise<Array<Dynamic>>
+	inline public static function hkeys(redis :Dynamic, hashkey :String) :Promise<Array<Dynamic>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.hkeys(hashkey, promise.cb2);
 		return promise;
 	}
 
-	inline public static function hset(redis :RedisClient, hashkey :String, hashField :String, val :String) :Promise<Int>
+	inline public static function hset(redis :Dynamic, hashkey :String, hashField :String, val :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise<Int>();
 		redis.hset(hashkey, hashField, val, promise.cb2);
 		return promise;
 	}
 
-	inline public static function hexists(redis :RedisClient, hashkey :String, hashField :String) :Promise<Bool>
+	inline public static function hexists(redis :Dynamic, hashkey :String, hashField :String) :Promise<Bool>
 	{
 		var promise = new promhx.CallbackPromise<Int>();
 		redis.hexists(hashkey, hashField, promise.cb2);
@@ -86,14 +83,14 @@ class RedisPromises
 			});
 	}
 
-	inline public static function hdel(redis :RedisClient, hashkey :String, hashField :String) :Promise<Int>
+	inline public static function hdel(redis :Dynamic, hashkey :String, hashField :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise<Int>();
 		redis.hdel(hashkey, hashField, promise.cb2);
 		return promise;
 	}
 
-	public static function getHashInt(redis :RedisClient, hashId :String, hashKey :String) :Promise<Int>
+	public static function getHashInt(redis :Dynamic, hashId :String, hashKey :String) :Promise<Int>
 	{
 		return hget(redis, hashId, hashKey)
 			.then(function(val) {
@@ -101,12 +98,12 @@ class RedisPromises
 			});
 	}
 
-	public static function setHashInt(redis :RedisClient, hashId :String, hashKey :String, val :Int) :Promise<Int>
+	public static function setHashInt(redis :Dynamic, hashId :String, hashKey :String, val :Int) :Promise<Int>
 	{
 		return hset(redis, hashId, hashKey, Std.string(val));
 	}
 
-	public static function getHashJson<T>(redis :RedisClient, hashId :String, hashKey :String) :Promise<T>
+	public static function getHashJson<T>(redis :Dynamic, hashId :String, hashKey :String) :Promise<T>
 	{
 		return hget(redis, hashId, hashKey)
 			.then(function(val) {
@@ -114,7 +111,7 @@ class RedisPromises
 			});
 	}
 
-	public static function sadd(redis :RedisClient, set :String, members :Array<String>) :Promise<Int>
+	public static function sadd(redis :Dynamic, set :String, members :Array<String>) :Promise<Int>
 	{
 		if (members == null || members.length == 0) {
 			return Promise.promise(0);
@@ -126,14 +123,14 @@ class RedisPromises
 		return promise;
 	}
 
-	public static function spop(redis :RedisClient, key :String) :Promise<Dynamic>
+	public static function spop(redis :Dynamic, key :String) :Promise<Dynamic>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.spop(key, promise.cb2);
 		return promise;
 	}
 
-	public static function sismember(redis :RedisClient, key :String, member :String) :Promise<Bool>
+	public static function sismember(redis :Dynamic, key :String, member :String) :Promise<Bool>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.sismember(key, member, promise.cb2);
@@ -143,21 +140,21 @@ class RedisPromises
 			});
 	}
 
-	public static function srem(redis :RedisClient, key :String, member :String) :Promise<Dynamic>
+	public static function srem(redis :Dynamic, key :String, member :String) :Promise<Dynamic>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.srem(key, member, promise.cb2);
 		return promise;
 	}
 
-	public static function srandmember(redis :RedisClient, key :String) :Promise<Dynamic>
+	public static function srandmember(redis :Dynamic, key :String) :Promise<Dynamic>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.srandmember(key, promise.cb2);
 		return promise;
 	}
 
-	public static function smembers(redis :RedisClient, key :String) :Promise<Array<Dynamic>>
+	public static function smembers(redis :Dynamic, key :String) :Promise<Array<Dynamic>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.smembers(key, promise.cb2);
@@ -170,7 +167,7 @@ class RedisPromises
 			});
 	}
 
-	public static function sinter(redis :RedisClient, keys :Array<String>) :Promise<Array<Dynamic>>
+	public static function sinter(redis :Dynamic, keys :Array<String>) :Promise<Array<Dynamic>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.sinter(keys, promise.cb2);
@@ -183,7 +180,7 @@ class RedisPromises
 			});
 	}
 
-	public static function zismember(redis :RedisClient, key :String, member :String) :Promise<Bool>
+	public static function zismember(redis :Dynamic, key :String, member :String) :Promise<Bool>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.zscore(key, member, promise.cb2);
@@ -193,28 +190,28 @@ class RedisPromises
 			});
 	}
 
-	public static function zadd(redis :RedisClient, key :String, score :Int, value :String) :Promise<Int>
+	public static function zadd(redis :Dynamic, key :String, score :Int, value :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.zadd(key, score, value, promise.cb2);
 		return promise;
 	}
 
-	public static function zrange(redis :RedisClient, key :String, from :Int, to :Int) :Promise<Array<Dynamic>>
+	public static function zrange(redis :Dynamic, key :String, from :Int, to :Int) :Promise<Array<Dynamic>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.zrange(key, from, to, promise.cb2);
 		return promise;
 	}
 
-	public static function zrangebyscore(redis :RedisClient, key :String, from :Float, to :Float) :Promise<Array<Dynamic>>
+	public static function zrangebyscore(redis :Dynamic, key :String, from :Float, to :Float) :Promise<Array<Dynamic>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.zrangebyscore(key, from, to, promise.cb2);
 		return promise;
 	}
 
-	public static function zscore(redis :RedisClient, key :String, value :String) :Promise<Float>
+	public static function zscore(redis :Dynamic, key :String, value :String) :Promise<Float>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.zscore(key, value, promise.cb2);
@@ -229,46 +226,46 @@ class RedisPromises
 			});
 	}
 
-	public static function lpush(redis :RedisClient, key :String, value :String) :Promise<Int>
+	public static function lpush(redis :Dynamic, key :String, value :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.lpush(key, value, promise.cb2);
 		return promise;
 	}
 
-	public static function lrange(redis :RedisClient, key :String, start :Int, end :Int) :Promise<Array<Dynamic>>
+	public static function lrange(redis :Dynamic, key :String, start :Int, end :Int) :Promise<Array<Dynamic>>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.lrange(key, start, end, promise.cb2);
 		return promise;
 	}
 
-	public static function del(redis :RedisClient, key :String) :Promise<Int>
+	public static function del(redis :Dynamic, key :String) :Promise<Int>
 	{
 		var promise = new promhx.CallbackPromise();
 		redis.del(key, promise.cb2);
 		return promise;
 	}
 
-	public static function hmset(redis :RedisClient, key :String, fieldVals :Dynamic<String>) :Promise<String>
+	public static function hmset(redis :Dynamic, key :String, fieldVals :Dynamic<String>) :Promise<String>
 	{
 		var promise = new promhx.CallbackPromise();
-		var keyS :RedisString = key;
-		var fieldValsS :Dynamic<RedisString> = cast fieldVals;
+		var keyS :String = key;
+		var fieldValsS :Dynamic<String> = cast fieldVals;
 		var cb :Null<js.Error>->Void = cast promise.cb2;
-		redis.hmset(keyS, fieldValsS, cb);
+		redis.hmset(cast keyS, cast fieldValsS, cb);
 		return promise.then(function(s) return s.asString());
 	}
 
-	public static function deleteAllKeys(client :RedisClient) :Promise<Bool>
+	public static function deleteAllKeys(redis :Dynamic) :Promise<Bool>
 	{
 		var promise = new promhx.deferred.DeferredPromise();
-		client.keys('*', function(err, keys :Array<String>) {
+		redis.keys('*', function(err, keys :Array<String>) {
 			var commands :Array<Array<String>> = [];
 			for (key in keys) {
 				commands.push(['del', key]);
 			}
-			client.multi(commands).exec(function(err, result) {
+			redis.multi(commands).exec(function(err, result) {
 				if (err != null) {
 					promise.boundPromise.reject(err);
 					return;
