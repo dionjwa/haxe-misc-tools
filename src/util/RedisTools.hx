@@ -46,18 +46,16 @@ class RedisTools
 	 * current value whenever the channel (from the channelKey)
 	 * is updated.
 	 */
-	public static function createStreamFromHash<T>(redisGen :Void->RedisClient, channelKey :String, hashKey :String, hashField :String) :Stream<T>
+	public static function createStreamFromHash<T>(redis :RedisClient, redisSubscribe :RedisClient, channelKey :String, hashKey :String, hashField :String) :Stream<T>
 	{
-		var redis = redisGen();
-		return createStreamCustom(function() return redis, channelKey, function(_) {
+		return createStreamCustom(redisSubscribe, channelKey, function(_) {
 			return cast RedisPromises.hget(redis, hashKey, hashField);
 		});
 	}
 
-	public static function createJsonStreamFromHash<T>(redisGen :Void->RedisClient, channelKey :String, hashKey :String, hashField :String) :Stream<T>
+	public static function createJsonStreamFromHash<T>(redis :RedisClient, redisSubscribe :RedisClient, channelKey :String, hashKey :String, hashField :String) :Stream<T>
 	{
-		var redis = redisGen();
-		return createStreamCustom(function() return redis, channelKey, function(_) {
+		return createStreamCustom(redisSubscribe, channelKey, function(_) {
 			return RedisPromises.hget(redis, hashKey, hashField)
 				.then(function(s) {
 					return Json.parse(s);
@@ -65,10 +63,9 @@ class RedisTools
 		});
 	}
 
-	public static function createStreamCustom<T>(redisGen :Void->RedisClient, channelKey :String, ?getter :Dynamic->Promise<T>, ?usePatterns :Bool = false) :Stream<T>
+	public static function createStreamCustom<T>(redisSubscribe :RedisClient, channelKey :String, ?getter :Dynamic->Promise<T>, ?usePatterns :Bool = false) :Stream<T>
 	{
-		var subscribeClient = redisGen();
-		return createStreamCustomInternal(subscribeClient, channelKey, getter, usePatterns);
+		return createStreamCustomInternal(redisSubscribe, channelKey, getter, usePatterns);
 	}
 
 	public static function createStreamCustomInternal<T>(subscribeClient :RedisClient, channelKey :String, ?getter :Dynamic->Promise<T>, ?usePatterns :Bool = false) :Stream<T>
@@ -143,14 +140,14 @@ class RedisTools
 		return deferred.boundStream;
 	}
 
-	public static function createStream<T>(redisGen :Void->RedisClient, key :String) :Stream<T>
+	public static function createStream<T>(redisSubscribe :RedisClient, key :String) :Stream<T>
 	{
-		return createStreamCustom(redisGen, key);
+		return createStreamCustom(redisSubscribe, key);
 	}
 
-	public static function createPublishStream<T>(redisGen :Void->RedisClient, channelKey :String, ?usePatterns :Bool = false) :Stream<T>
+	public static function createPublishStream<T>(redisSubscribe :RedisClient, channelKey :String, ?usePatterns :Bool = false) :Stream<T>
 	{
-		return createStreamCustom(redisGen, channelKey, function(message) return Promise.promise(message), usePatterns);
+		return createStreamCustom(redisSubscribe, channelKey, function(message) return Promise.promise(message), usePatterns);
 	}
 
 	public static function sendStreamedValue(client :RedisClient, key :String, val :Dynamic) :Promise<Bool>
@@ -167,13 +164,12 @@ class RedisTools
 		return deferred.boundPromise;
 	}
 
-	public static function createJsonStream<T>(redisGen :Void->RedisClient, channelKey :String, ?redisKey :String, ?usePatterns :Bool = false #if debug ,?pos:haxe.PosInfos #end) :Stream<T>
+	public static function createJsonStream<T>(redis :RedisClient, redisSubscribe :RedisClient, channelKey :String, ?redisKey :String, ?usePatterns :Bool = false #if debug ,?pos:haxe.PosInfos #end) :Stream<T>
 	{
 		if (redisKey == null) {
 			redisKey = channelKey;
 		}
-		var redis = redisGen();
-		return createStreamCustom(function() return redis, channelKey, function(message) {
+		return createStreamCustom(redisSubscribe, channelKey, function(message) {
 				var promise = new DeferredPromise<T>(#if debug pos #end);
 				redis.get(redisKey, function(err :Dynamic, val) {
 					if (err != null) {
