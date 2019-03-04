@@ -122,7 +122,6 @@ class RedisTools
 			} else {
 				subscribeClient.unsubscribe(channelKey);
 			}
-			subscribeClient.quit();
 		});
 
 		subscribeClient.on(RedisEvent.Error, function(err) {
